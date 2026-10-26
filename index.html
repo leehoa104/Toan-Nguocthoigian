@@ -1643,6 +1643,39 @@ body.map-mode .toast{font-size:.9rem;padding:6px 14px}
   .mh-right .mh-ic[data-top=settings]{grid-area:i1}.mh-right .mh-ic[data-top=home]{grid-area:i2}
   .mhud-top .econ-hud{grid-area:econ;justify-self:end;margin-left:0}
 }
+/* v23: thanh trên bản đồ mỏng, trong suốt – nhường chỗ cho bản đồ */
+.mhud-top{background:none!important;padding:max(6px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) 0 max(8px,env(safe-area-inset-left))!important;gap:6px}
+.mh-title{background:rgba(14,10,40,.62);border-radius:14px;padding:2px 10px 3px;flex:0 1 auto!important;max-width:46%}
+.mh-title b{font-size:1rem}
+.mh-back{height:34px;font-size:.82rem;background:rgba(14,10,40,.7)}
+.mh-ic{width:34px;height:34px;background:rgba(14,10,40,.7)}
+.mh-ic svg{width:17px;height:17px}
+.mh-right{margin-left:auto}
+.mhud-top .econ-hud{background:rgba(14,10,40,.7)}
+body.map-mode .map-hint{top:calc(48px + env(safe-area-inset-top))}
+body.map-mode .toasts{top:calc(48px + env(safe-area-inset-top))}
+body.map-mode .map-panel{padding:calc(48px + env(safe-area-inset-top)) 8px 8px}
+@container app (max-height:500px){
+  .mhud-top{padding-top:4px!important}
+  .mh-back,.mh-ic{height:30px}.mh-ic{width:30px}.mh-back span{font-size:.78rem}
+  .mh-title{padding:1px 8px 2px}.mh-title b{font-size:.9rem}.mh-title .run-clock{font-size:.68rem;padding:0 6px}
+  .mhud-top .econ-hud{font-size:.75rem;padding:1px 6px 1px 2px}.mhud-top .econ-hud img.ic3d{width:18px;height:18px}.mhud-top .eh-bar{width:60px}
+  body.map-mode .map-hint,body.map-mode .toasts{top:40px}
+  body.map-mode .map-panel{padding-top:40px}
+  .joy{width:104px;height:104px;bottom:10px;left:max(10px,env(safe-area-inset-left))}.joy-knob{width:46px;height:46px;margin:-23px 0 0 -23px}
+  .map-stage .act-btn{width:74px;height:74px;bottom:12px;right:max(12px,env(safe-area-inset-right))}.ab-ic{width:38px;height:38px}
+}
+@container app (max-width:560px){
+  .mh-title{display:flex!important;max-width:none;grid-area:title}
+  .mh-title b{grid-area:auto}
+  .mh-sub{grid-area:auto}
+  .mhud-top{grid-template-areas:"back title i1 i2" ". . econ econ"}
+  body.map-mode .map-hint,body.map-mode .toasts{top:calc(84px + env(safe-area-inset-top))}
+  body.map-mode .map-panel{padding-top:calc(84px + env(safe-area-inset-top))}
+}
+/* v23: các màn hình khác – bớt lề để ít phải cuộn */
+@container app (max-width:600px){#app{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right));padding-block:8px 16px;gap:10px}}
+@container app (max-height:500px){#app{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right));padding-block:6px 10px;gap:8px}}
 
 </style>
 </head>
