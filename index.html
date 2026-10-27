@@ -1677,6 +1677,43 @@ body.map-mode .map-panel{padding:calc(48px + env(safe-area-inset-top)) 8px 8px}
 @container app (max-width:600px){#app{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right));padding-block:8px 16px;gap:10px}}
 @container app (max-height:500px){#app{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right));padding-block:6px 10px;gap:8px}}
 
+/* ===================== v24: bàn phím số của game ===================== */
+.kpad{position:absolute;z-index:80;left:0;right:0;bottom:0;background:rgba(22,18,62,.97);border-top:3px solid #EBC97C;padding:6px 8px calc(6px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px;box-shadow:0 -6px 20px rgba(0,0,0,.4);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.kpad[hidden]{display:none!important}
+.kp-head{display:flex;align-items:center;gap:6px;color:#FFE7A8;font-size:.82rem}
+.kp-head b{flex:1}
+.kp-x{border:2px solid rgba(255,255,255,.6);background:transparent;color:#fff;border-radius:999px;padding:1px 10px;font-weight:800;font-size:.8rem;min-height:28px}
+.kp-units{display:none;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.kp-units::-webkit-scrollbar{display:none}
+.kpad.units .kp-units{display:flex}
+.kk{border:2px solid var(--ink);background:#fff;color:var(--ink);border-radius:10px;font-family:var(--f-display);font-weight:800;font-size:1.15rem;min-height:42px;padding:0;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.kk:active{transform:translateY(2px);box-shadow:none;background:#FFE27A}
+.kk.u{flex:none;min-height:32px;padding:0 10px;font-size:.85rem;font-family:var(--f-body);background:#E9E5FF}
+.kk.fn{background:#FFD3CC}.kk.ok{background:#7ED6A5}.kk.sp{font-size:.9rem}
+.kp-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+body.kp-on #scroller{padding-bottom:230px!important}
+/* xoay ngang: bàn phím thành cột gọn bên phải */
+.kpad.land{left:auto;top:0;width:min(240px,34%);border-top:0;border-left:3px solid #EBC97C;padding:6px max(8px,env(safe-area-inset-right)) 6px 8px;justify-content:flex-end;box-shadow:-6px 0 20px rgba(0,0,0,.4)}
+.kpad.land .kk{min-height:38px;font-size:1.05rem}
+.kpad.land .kp-units{flex-wrap:wrap;overflow:visible;max-height:72px;overflow-y:auto}
+body.kp-on.kp-land #scroller{padding-bottom:0!important;padding-right:min(244px,35%)!important}
+
+/* ===================== v24: cỡ giao diện ===================== */
+body.ui-s .mh-ic,body.ui-s .mh-back{height:32px}body.ui-s .mh-ic{width:32px}
+body.ui-s .mh-title b{font-size:.92rem}
+body.ui-s .joy{width:104px;height:104px}body.ui-s .joy-knob{width:46px;height:46px;margin:-23px 0 0 -23px}
+body.ui-s .map-stage .act-btn{width:72px;height:72px}body.ui-s .ab-ic{width:36px;height:36px}
+body.ui-s .ab-txt b{font-size:.85rem}body.ui-s .ab-txt small{font-size:.7rem}
+body.ui-s .m-label{font-size:13px;padding:2px 8px}
+body.ui-s .m-tag{font-size:12px;padding:1px 7px}
+body.ui-s .m-name{font-size:12px}
+body.ui-s .topbar .icon-btn{width:34px;height:34px}
+body.ui-s .act{padding:10px 12px}
+body.ui-s .opt{min-height:48px;padding:8px 12px}
+body.ui-l .q-text{font-size:1.5rem}
+body.ui-l .opt{font-size:1.25rem}
+body.ui-l .m-label{font-size:17px}
+
 </style>
 </head>
 <body>
@@ -2323,7 +2360,7 @@ const CFG = {
   tenTruong: 'Trường Tiểu học Hoa Phượng',
   diemToiThieu: 7
 };
-let SETTINGS = Object.assign({ music: true, sfx: true, vol: 0.5, autoTime: true, speed: 1, track: 'random' }, store.get(KEYS.settings, {}));
+let SETTINGS = Object.assign({ music: true, sfx: true, vol: 0.5, autoTime: true, speed: 1, track: 'random', uiSize: 'auto', kpLand: true, kpPort: false }, store.get(KEYS.settings, {}));
 const saveSettings = () => store.set(KEYS.settings, SETTINGS);
 
 /* ===================== ÂM THANH (tự tạo bằng WebAudio, không cần file nhạc) ===================== */
@@ -2786,6 +2823,11 @@ const Sys = {
     if (this.cloud) { const d = await this.db.collection('config').doc('main').get(); return d.exists ? d.data() : null; }
     return store.get(KEYS.cfg, null);
   },
+  /* Ghi đè một vài mục cài đặt trong 1 lần gửi (nhanh hơn đọc rồi ghi lại cả bộ) */
+  async patchCfg(patch) {
+    if (this.cloud) { const ref = this.db.collection('config').doc('main'); try { await ref.update(patch); } catch (e) { await ref.set(patch, { merge: true }); } return; }
+    store.set(KEYS.cfg, Object.assign({}, store.get(KEYS.cfg, {}) || {}, patch));
+  },
   async setCfg(c) { if (this.cloud) await this.db.collection('config').doc('main').set(c); else store.set(KEYS.cfg, c); },
   /* --- Thư viện đề (Word/PDF) --- */
   async libList() {
@@ -2900,9 +2942,10 @@ const Auth = {
       await Sys.auth.setPersistence(remember ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION);
       try {
         const cr = await Sys.auth.createUserWithEmailAndPassword(slug + STUDENT_DOMAIN, pw);
-        await cr.user.updateProfile({ displayName: name });
-        this.user = { key: cr.user.uid, uid: cr.user.uid, name, role: 'student' };
-        await Sys.db.collection('players').doc(cr.user.uid).set({ name, created: Date.now() }, { merge: true });
+        this.user = { key: cr.user.uid, uid: cr.user.uid, name, role: 'student', fresh: true };
+        /* hai việc phụ chạy song song, không bắt học sinh chờ */
+        cr.user.updateProfile({ displayName: name }).catch(e => console.warn(e));
+        Sys.db.collection('players').doc(cr.user.uid).set({ name, created: Date.now() }, { merge: true }).catch(e => console.warn(e));
       } catch (e) { throw new Error(this.cloudErr(e, dupMsg)); }
       return this.user;
     }
@@ -3722,6 +3765,95 @@ function catOnAnswer(ok) {
   if (Q.streak === 3) catSay('streak', true);
   if (Q.streak === -2) catSay('wrongs', true);
 }
+
+/* ===================== CỠ GIAO DIỆN & BÀN PHÍM SỐ CỦA GAME =====================
+   - Cỡ giao diện: Tự động theo thiết bị / Nhỏ / Vừa / Lớn (Cài đặt).
+   - Bàn phím số riêng: dùng khi điền đáp án trên máy cảm ứng; mặc định bật khi xoay ngang, tắt khi để dọc
+     (bật/tắt riêng từng chế độ trong Cài đặt). Bàn phím xoay theo game, nhỏ gọn, không che câu hỏi. */
+const UI_SIZES = { auto: 'Tự động theo thiết bị', s: 'Nhỏ', m: 'Vừa', l: 'Lớn' };
+function uiRootBox() { const r = document.getElementById('root'); return r ? { w: r.clientWidth, h: r.clientHeight } : { w: innerWidth, h: innerHeight }; }
+function uiAutoSize() {
+  const b = uiRootBox(), small = Math.min(b.w, b.h), touch = matchMedia('(pointer:coarse)').matches;
+  if (small <= 520) return 's';                       /* điện thoại (dọc hoặc ngang) */
+  if (!touch && b.w >= 1200 && b.h >= 650) return 'l'; /* máy tính màn hình rộng */
+  return 'm';                                          /* iPad, laptop nhỏ */
+}
+function uiSize() { const v = SETTINGS.uiSize || 'auto'; return v === 'auto' ? uiAutoSize() : v; }
+function uiApply() {
+  const z = uiSize(), px = { s: 14, m: 16, l: 17.5 }[z] || 16;
+  document.documentElement.style.fontSize = px + 'px';
+  document.body.classList.remove('ui-s', 'ui-m', 'ui-l'); document.body.classList.add('ui-' + z);
+  document.body.classList.toggle('ui-phone', Math.min(uiRootBox().w, uiRootBox().h) <= 520);
+}
+let uiT = 0; addEventListener('resize', () => { clearTimeout(uiT); uiT = setTimeout(uiApply, 120); });
+addEventListener('orientationchange', () => setTimeout(uiApply, 300));
+setTimeout(uiApply, 0);
+
+/* ---------- Bàn phím số ---------- */
+const KP_SEL = '.fill-input, #lv-t, #lv-n';
+const KP_UNITS = ['kg', 'g', 'yến', 'tạ', 'tấn', 'km', 'm', 'dm', 'cm', 'mm', 'km²', 'm²', 'dm²', 'cm²', 'ha', 'l', 'ml', 'giờ', 'phút', 'giây', 'ngày', 'đồng', '°'];
+const kpTouch = () => matchMedia('(pointer:coarse)').matches;
+const kpLand = () => { if (document.body.classList.contains('force-land')) return true; const b = uiRootBox(); return b.w > b.h; };
+const kpWanted = () => kpTouch() && (kpLand() ? SETTINGS.kpLand !== false : !!SETTINGS.kpPort);
+let KP = null;
+function kpEl() {
+  if (KP && KP.isConnected) return KP;
+  KP = document.createElement('div'); KP.className = 'kpad'; KP.hidden = true; KP.setAttribute('role', 'group'); KP.setAttribute('aria-label', 'Bàn phím số');
+  const k = (v, cls = '', lab) => `<button type="button" class="kk ${cls}" data-kv="${esc(v)}" aria-label="${esc(lab || v)}">${esc(lab || v)}</button>`;
+  KP.innerHTML = `<div class="kp-head"><b>Bàn phím số</b><button type="button" class="kp-x" data-kc="abc" title="Dùng bàn phím của máy">ABC</button><button type="button" class="kp-x" data-kc="hide" aria-label="Ẩn bàn phím">▾</button></div>
+    <div class="kp-units">${KP_UNITS.map(u => k(' ' + u, 'u', u)).join('')}</div>
+    <div class="kp-grid">${k('7')}${k('8')}${k('9')}<button type="button" class="kk fn" data-kc="del" aria-label="Xoá">⌫</button>
+      ${k('4')}${k('5')}${k('6')}${k(',')}
+      ${k('1')}${k('2')}${k('3')}${k('/')}
+      ${k('0')}${k(' ', 'sp', '␣')}${k('-', '', '−')}<button type="button" class="kk ok" data-kc="ok" aria-label="Xong">✓</button></div>`;
+  ROOT().appendChild(KP);
+  KP.addEventListener('pointerdown', (e) => { if (e.target.closest('button')) e.preventDefault(); });   /* giữ con trỏ trong ô đang điền */
+  KP.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b || !KP.target) return;
+    const t = KP.target; Sound.sfx && Sound.sfx('click');
+    if (b.dataset.kv != null) return kpInsert(t, b.dataset.kv.replace(/^ (?=\S)/, t.value && !/\s$/.test(t.value) ? ' ' : ''));
+    const c = b.dataset.kc;
+    if (c === 'del') return kpDel(t);
+    if (c === 'abc') { t.dataset.kpSys = '1'; t.setAttribute('inputmode', t.dataset.kpIm || 'text'); kpHide(); t.blur(); setTimeout(() => t.focus(), 60); return; }
+    if (c === 'hide') { kpHide(); t.blur(); return; }
+    if (c === 'ok') { const all = [...document.querySelectorAll(KP_SEL)].filter(x => !x.disabled && x.offsetParent), i = all.indexOf(t); if (i >= 0 && i < all.length - 1) { all[i + 1].focus(); kpShow(all[i + 1]); } else { kpHide(); t.blur(); } }
+  });
+  return KP;
+}
+function kpFire(t) { t.dispatchEvent(new Event('input', { bubbles: true })); }
+function kpInsert(t, s) {
+  if (t.type === 'number') { t.value = (t.value || '') + s.replace(/[^\d]/g, ''); return kpFire(t); }
+  const a = t.selectionStart ?? t.value.length, b = t.selectionEnd ?? t.value.length;
+  if (t.maxLength > 0 && t.value.length - (b - a) + s.length > t.maxLength) return;
+  t.value = t.value.slice(0, a) + s + t.value.slice(b); try { t.setSelectionRange(a + s.length, a + s.length); } catch (e) { }
+  kpFire(t);
+}
+function kpDel(t) {
+  if (t.type === 'number') { t.value = String(t.value || '').slice(0, -1); return kpFire(t); }
+  let a = t.selectionStart ?? t.value.length, b = t.selectionEnd ?? t.value.length;
+  if (a === b) { if (!a) return; a--; }
+  t.value = t.value.slice(0, a) + t.value.slice(b); try { t.setSelectionRange(a, a); } catch (e) { }
+  kpFire(t);
+}
+function kpPrep(t) {   /* trước khi ô nhận con trỏ: tắt bàn phím của máy nếu dùng bàn phím game */
+  if (!t.dataset.kpIm) t.dataset.kpIm = t.getAttribute('inputmode') || 'text';
+  if (kpWanted() && !t.dataset.kpSys) t.setAttribute('inputmode', 'none'); else t.setAttribute('inputmode', t.dataset.kpIm);
+}
+function kpShow(t) {
+  const p = kpEl(); p.target = t; p.hidden = false;
+  p.classList.toggle('land', kpLand()); p.classList.toggle('units', !(t.id === 'lv-t' || t.id === 'lv-n' || t.classList.contains('fbox-in')));
+  document.body.classList.add('kp-on'); document.body.classList.toggle('kp-land', kpLand());
+  setTimeout(() => { try { t.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { } }, 60);
+}
+function kpHide() { if (KP) { KP.hidden = true; KP.target = null; } document.body.classList.remove('kp-on', 'kp-land'); }
+document.addEventListener('pointerdown', (e) => { const t = e.target.closest && e.target.closest(KP_SEL); if (t) kpPrep(t); }, true);
+document.addEventListener('focusin', (e) => {
+  const t = e.target;
+  if (!(t.matches && t.matches(KP_SEL))) return;
+  kpPrep(t);
+  if (kpWanted() && !t.dataset.kpSys) kpShow(t); else kpHide();
+});
+document.addEventListener('focusout', () => setTimeout(() => { const a = document.activeElement; if (!a || !(a.matches && a.matches(KP_SEL))) kpHide(); }, 120));
 
 const TIMO_DATA = [
 {
@@ -7594,8 +7726,7 @@ async function shopPanel(body, pl) {
 
 /* ===================== GÓC GIÁO VIÊN: NHÂN VẬT, NHIỆM VỤ, CỬA HÀNG ===================== */
 async function cfgSave(patch, msg) {
-  const cur = await Sys.getCfg().catch(() => null) || {};
-  await Sys.setCfg(Object.assign({}, cur, patch)); Object.assign(CFG, patch); if (patch.npc) npcApplyNames();
+  await Sys.patchCfg(patch); Object.assign(CFG, patch); if (patch.npc) npcApplyNames();
   toast(msg || 'Đã lưu.');
 }
 function admNpc() {
@@ -7854,12 +7985,21 @@ function scrMap(id, pl, opt = {}) {
   function clearLine(ax, ay, bx, by) { const d = Math.hypot(bx - ax, by - ay), n = Math.ceil(d / 8); for (let i = 1; i <= n; i++) { const t = i / n; if (blocked(ax + (bx - ax) * t, ay + (by - ay) * t)) return false; } return true; }
   function routeTo(tx, ty) { const final = { x: tx, y: ty }; if (clearLine(st.x, st.y, tx, ty)) { st.path = []; st.target = final; return; } const p = findPath(st.x, st.y, tx, ty); st.path = p && p.length ? p.slice(0, -1) : []; st.target = p && p.length ? (st.path.length ? st.path.shift() : final) : final; st.final = final; if (p && p.length) st.final = p[p.length - 1].x === final.x ? final : (blocked(final.x, final.y) ? p[p.length - 1] : final); }
   function fit() {
-    const W = view_.clientWidth, H = view_.clientHeight;
-    let s = Math.min(W / MW, H / MH);
-    st.follow = s < 0.62;
-    if (st.follow) s = Math.min(0.9, Math.max(W / MW, Math.min(H / MH * 1.6, 0.62), 0.5));
+    const W = view_.clientWidth, H = view_.clientHeight, z = uiSize(), phone = document.body.classList.contains('ui-phone');
+    let s;
+    if (phone) {   /* điện thoại: thu nhỏ để thấy rộng hơn, camera đi theo nhân vật, vẫn phủ kín bề ngang */
+      const f = { s: 0.84, m: 1, l: 1.12 }[z] || 1;
+      s = Math.max(W / MW, Math.min(0.9, Math.max(Math.min(H / MH * 1.6, 0.62), 0.5)) * f);
+      st.follow = true;
+    } else {        /* máy tính, iPad: phủ kín cả khung (không còn dải đen hai bên), camera đi theo nhân vật */
+      const f = { s: 0.85, m: 1, l: 1.12 }[z] || 1;
+      s = Math.max(W / MW, H / MH, Math.min(0.62 * f, 1.4));
+      s = Math.min(Math.max(s, W / MW), 1.6);
+      st.follow = MW * s > W + 1 || MH * s > H + 1;
+    }
     st.scale = s; place(true);
   }
+  st.fit = fit;
   function place() {
     me.style.transform = `translate3d(${st.x.toFixed(1)}px,${st.y.toFixed(1)}px,0)`;
     me.style.zIndex = 3 + Math.round(st.y / 10);
@@ -8241,6 +8381,7 @@ async function loadUserData() {
   setTimeout(() => { if (P && Auth.user) { econInit(); econRefundCheck(); } }, 1500);
   P = store.get(uk(KEYS.profile), null) || newProfile();
   S = store.get(uk(KEYS.save), null);
+  if (Auth.user && Auth.user.fresh) { delete Auth.user.fresh; return; }   /* tài khoản mới: chưa có gì để tải về */
   const c = await Sys.pullPlayer();
   if (c && c.profile && (c.updatedAt || 0) > (P.updatedAt || 0)) {
     P = Object.assign(newProfile(), c.profile); S = c.save || null;
@@ -8331,6 +8472,9 @@ function openSettings() {
     <div class="row"><div><b>Bản nhạc</b><div class="sub">Đang phát: <span id="st-now">${esc(Sound.trackName() || '—')}</span></div></div><div class="seg"><select id="st-track" class="text-input" style="width:auto" aria-label="Chọn bản nhạc"><option value="random" ${SETTINGS.track === 'random' ? 'selected' : ''}>Ngẫu nhiên (tự đổi bài)</option>${Object.entries(MUSIC).map(([k, m]) => `<option value="${k}" ${SETTINGS.track === k ? 'selected' : ''}>${m.name}</option>`).join('')}</select><button class="btn small" id="st-next" type="button">Đổi bài ▶</button></div></div>
     <div class="row"><b>Âm lượng</b><input type="range" id="st-vol" min="0" max="1" step="0.05" value="${SETTINGS.vol}" aria-label="Âm lượng" style="width:160px"></div>
     ${row('st-sfx', 'Âm thanh hiệu ứng', SETTINGS.sfx, 'Tiếng đúng, sai, lật trang')}
+    <div class="row"><div><b>Cỡ giao diện</b><div class="sub">Tự động: điện thoại nhỏ gọn, máy tính chữ to. Đang dùng: <span id="st-uinow">${UI_SIZES[uiSize()]}</span></div></div><select id="st-ui" class="text-input" style="width:auto" aria-label="Cỡ giao diện">${Object.entries(UI_SIZES).map(([k, n]) => `<option value="${k}" ${(SETTINGS.uiSize || 'auto') === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+    ${row('st-kpl', 'Bàn phím số của game khi xoay ngang', SETTINGS.kpLand !== false, 'Bàn phím nhỏ gọn khi điền đáp án, xoay theo game, không che câu hỏi')}
+    ${row('st-kpp', 'Bàn phím số của game khi để dọc', !!SETTINGS.kpPort, 'Tắt thì dùng bàn phím của điện thoại')}
     ${row('st-auto', 'Đồng hồ ảo tự chạy', SETTINGS.autoTime, 'Khi tắt, thời gian chỉ trôi khi em làm một việc')}
     <div class="row"><div><b>Tốc độ thời gian ảo</b><div class="sub">1 giờ ảo = <span id="st-speedtxt">${Math.round(CFG.giayMoiGioAo / SETTINGS.speed)}</span> giây thật</div></div>${speedOptions('st-speed')}</div>
     <div class="row"><div><b>Hướng màn hình</b><div class="sub">Chọn "Xoay ngang" rồi xoay điện thoại sang trái, giao diện sẽ tự quay theo (không cần mở khoá xoay). Có nút xoay nhanh ở góc trên.</div></div><div class="seg" role="group" aria-label="Hướng màn hình"><button class="btn small" data-ori="auto" aria-pressed="${!SETTINGS.landscape}">Tự động</button><button class="btn small" data-ori="land" aria-pressed="${!!SETTINGS.landscape}">Xoay ngang</button></div></div>
@@ -8339,7 +8483,8 @@ function openSettings() {
   const el = m.el;
   const sw = (id, key, after) => { const b = el.querySelector('#' + id); b.onclick = () => { SETTINGS[key] = !SETTINGS[key]; b.setAttribute('aria-checked', SETTINGS[key]); saveSettings(); after && after(); }; };
   sw('st-music', 'music', () => { if (SETTINGS.music) Sound.startMusic(); else Sound.stopMusic(); $$('[data-top=music]').forEach(x => x.innerHTML = SETTINGS.music ? ICON.note : ICON.noteOff); });
-  sw('st-sfx', 'sfx'); sw('st-auto', 'autoTime', () => { if (curScreen === 'hub') scrHub(); });
+  sw('st-sfx', 'sfx'); sw('st-kpl', 'kpLand'); sw('st-kpp', 'kpPort');
+  el.querySelector('#st-ui').onchange = (e) => { SETTINGS.uiSize = e.target.value; saveSettings(); uiApply(); el.querySelector('#st-uinow').textContent = UI_SIZES[uiSize()]; if (MAP && curScreen === 'map' && MAP.fit) MAP.fit(); }; sw('st-auto', 'autoTime', () => { if (curScreen === 'hub') scrHub(); });
   const showNow = () => { el.querySelector('#st-now').textContent = Sound.trackName() || '—'; };
   el.querySelector('#st-track').onchange = (e) => { SETTINGS.track = e.target.value; saveSettings(); Sound.pickTrack(SETTINGS.track); if (!SETTINGS.music) { SETTINGS.music = true; el.querySelector('#st-music').setAttribute('aria-checked', true); saveSettings(); } Sound.stopMusic(); Sound.startMusic(); showNow(); };
   el.querySelector('#st-next').onclick = () => { Sound.init(); if (!SETTINGS.music) { SETTINGS.music = true; el.querySelector('#st-music').setAttribute('aria-checked', true); saveSettings(); } Sound.stopMusic(); Sound.nextTrack(); if (SETTINGS.track !== 'random') { SETTINGS.track = Sound.track; el.querySelector('#st-track').value = Sound.track; saveSettings(); } Sound.startMusic(); showNow(); toast('♪ ' + Sound.trackName()); };
@@ -9880,7 +10025,7 @@ function admChallenge() {
         if (!isFinite(v) || v < lo || v > hi) { bad = bad || `${inp.getAttribute('aria-label')} phải từ ${lo} đến ${hi}.`; inp.classList.add('bad'); } else { inp.classList.remove('bad'); nv[m][+inp.dataset.i][k] = v; } });
       const ph = Math.round(+$('#tt-phat').value); if (!isFinite(ph) || ph < 0 || ph > 30) bad = bad || 'Số giây bị trừ phải từ 0 đến 30.'; else nv.phat = ph;
       if (bad) { msg.className = 'form-msg'; msg.textContent = bad; return; }
-      try { const cur = await Sys.getCfg().catch(() => null) || {}; await Sys.setCfg(Object.assign({}, cur, { thuThach: nv })); CFG.thuThach = nv; msg.className = 'form-msg ok'; msg.textContent = ''; toast('Đã lưu cài đặt thử thách.'); }
+      try { await Sys.patchCfg({ thuThach: nv }); CFG.thuThach = nv; msg.className = 'form-msg ok'; msg.textContent = ''; toast('Đã lưu cài đặt thử thách.'); }
       catch (e) { msg.className = 'form-msg'; msg.textContent = e.message; }
     };
   };
@@ -9914,7 +10059,7 @@ function admEvents() {
   $('#ev-save').onclick = async () => {
     const events = {}; $$('[data-ev]').forEach(b => { if (b.getAttribute('aria-checked') !== 'true') events[b.dataset.ev] = false; });
     const eventRate = +$('#ev-rate').value; const catOn = $('#ev-cat').getAttribute('aria-checked') === 'true';
-    try { const cur = await Sys.getCfg().catch(() => null) || {}; await Sys.setCfg(Object.assign({}, cur, { events, eventRate, catOn })); CFG.events = events; CFG.eventRate = eventRate; CFG.catOn = catOn; toast('Đã lưu cài đặt sự kiện.'); }
+    try { await Sys.patchCfg({ events, eventRate, catOn }); CFG.events = events; CFG.eventRate = eventRate; CFG.catOn = catOn; toast('Đã lưu cài đặt sự kiện.'); }
     catch (e) { $('#ev-msg').textContent = 'Chưa lưu được: ' + e.message; }
   };
   $$('[data-evtry]').forEach(b => b.onclick = () => {
@@ -9983,8 +10128,7 @@ function admEndings() {
       if (!keepText) { all[st.id] = all[st.id] || {}; if (obj) all[st.id][key] = obj; else delete all[st.id][key]; }
       let g = parseFloat(String($('#en-gan').value).replace(',', '.')), k = parseFloat(String($('#en-kha').value).replace(',', '.'));
       if (!(g >= 0)) g = CFG.nguongGan; if (!(k >= 0)) k = CFG.nguongKha; if (k < g) k = g;
-      const cfgNow = await Sys.getCfg().catch(() => null) || {};
-      await Sys.setCfg(Object.assign({}, cfgNow, { endText: all, nguongGan: g, nguongKha: k }));
+      await Sys.patchCfg({ endText: all, nguongGan: g, nguongKha: k });
       CFG.endText = all; CFG.nguongGan = g; CFG.nguongKha = k; toast(msg); admEndings();
     } catch (e) { $('#en-msg').textContent = 'Chưa lưu được: ' + e.message; }
   };
