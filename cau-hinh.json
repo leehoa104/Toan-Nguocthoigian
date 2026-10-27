@@ -1,11 +1,11 @@
-{
-  "tenTruong": "Trường Tiểu học Hoa Phượng",
-  "firebase": {
-    "apiKey": "",
-    "authDomain": "",
-    "projectId": "",
-    "storageBucket": "",
-    "messagingSenderId": "",
-    "appId": ""
-  }
-}
+ {
+     "tenTruong": "Trường Tiểu học KioMath",
+     "firebase": {
+       "apiKey": "AIzaSyDlVrOOYfuhMpFvqr2OI3_1y5-G8kuSZiI",
+       "authDomain": "toan-nguoc-thoi-gian.firebaseapp.com",
+       "projectId": "toan-nguoc-thoi-gian",
+       "storageBucket": "toan-nguoc-thoi-gian.firebasestorage.app",
+       "messagingSenderId": "947300304829",
+       "appId": "1:947300304829:web:e3aef0b5662ca3978ef4d4"
+     }
+   }
